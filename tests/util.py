@@ -11,3 +11,10 @@ def get_all_src_py_files_hash():
                     while chunk := f.read(8192):
                         hash_sha256.update(chunk)
     return hash_sha256.hexdigest()
+
+user_id_counter = 0
+
+def get_new_user_id() -> int:
+    global user_id_counter
+    user_id_counter += 1
+    return user_id_counter
