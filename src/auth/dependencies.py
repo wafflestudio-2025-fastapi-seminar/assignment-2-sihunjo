@@ -1,8 +1,10 @@
-from fastapi import Depends, HTTPException, status, Header, Cookie
 from typing import Annotated
+
+from fastapi import Cookie, Header, HTTPException, status
 from jose import JWTError
 
-from common import repository, security
+from src.common import repository, security
+
 
 def get_current_user(
     sid: Annotated[str | None, Cookie()] = None,
@@ -27,3 +29,5 @@ def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="INVALID SESSION")
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="UNAUTHENTICATED")
+
+
