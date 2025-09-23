@@ -19,6 +19,11 @@ def get_user_by_id(user_id: int) -> dict | None:
 def create_user_in_db(request) -> dict:
     from src.users.schemas import CreateUserRequest  # type: ignore
 
+    # Defensive unique email check at data layer (simulates DB UNIQUE constraint)
+    if get_user_by_email(request.email):
+        from src.users.errors import EmailAlreadyExists  # type: ignore
+        raise EmailAlreadyExists()
+
     hashed_password = hash_password(request.password)
     new_user = {
         "user_id": get_new_user_id(),
@@ -39,7 +44,7 @@ from datetime import datetime, timedelta
 
 def get_user_id_from_session(sid: str) -> int | None:
     session = session_db.get(sid)
-    if session and session["expires_at"] > datetime.utcnow():
+    if session and session["expires_at"] > datetime.now(datetime.UTC):
         return session["user_id"]
     return None
 
@@ -47,7 +52,7 @@ def get_user_id_from_session(sid: str) -> int | None:
 def create_session_in_db(user_id: int, expire_in_minutes: int) -> str:
     sid = str(uuid.uuid4())
 
-    expires_time = datetime.utcnow() + timedelta(minutes=expire_in_minutes)
+    expires_time = datetime.now(datetime.UTC) + timedelta(minutes=expire_in_minutes)
     session_db[sid] = {
         "user_id": user_id,
         "expires_at": expires_time,

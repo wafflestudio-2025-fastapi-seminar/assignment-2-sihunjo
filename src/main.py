@@ -21,24 +21,67 @@ async def custom_exception_handler(request: Request, exc: CustomException):
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
+    # Map known messages to specific codes
+    detail = exc.detail if isinstance(exc.detail, str) else "HTTP ERROR"
+    mapping = {
+        "BAD AUTHORIZATION HEADER": "ERR_007",
+        "INVALID TOKEN": "ERR_008",
+        "INVALID SESSION": "ERR_006",
+        "UNAUTHENTICATED": "ERR_009",
+        "INVALID ACCOUNT": "ERR_010",
+    }
+    error_code = mapping.get(detail, f"ERR_{exc.status_code}")
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            "error_code": f"ERR_{exc.status_code}",
-            "error_msg": exc.detail if isinstance(exc.detail, str) else "HTTP ERROR",
+            "error_code": error_code,
+            "error_msg": detail,
         },
     )
 
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return JSONResponse(
-        status_code=422,
-        content={
-            "error_code": "ERR_422",
-            "error_msg": "VALIDATION ERROR",
-        },
-    )
+    # Translate validation errors to standardized codes/messages
+    try:
+        errors = exc.errors()
+        # Prioritize field-specific mappings
+        for err in errors:
+            loc = err.get("loc") or []
+            field = loc[-1] if loc else None
+            if field == "phone_number":
+                return JSONResponse(
+                    status_code=422,
+                    content={
+                        "error_code": "ERR_003",
+                        "error_msg": "INVALID PHONE NUMBER",
+                    },
+                )
+            if field == "bio":
+                return JSONResponse(
+                    status_code=422,
+                    content={
+                        "error_code": "ERR_004",
+                        "error_msg": "BIO TOO LONG",
+                    },
+                )
+        # Default for missing or other validation errors
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error_code": "ERR_001",
+                "error_msg": "MISSING VALUE",
+            },
+        )
+    except Exception:
+        # Fallback to generic validation error if unexpected structure
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error_code": "ERR_001",
+                "error_msg": "MISSING VALUE",
+            },
+        )
 
 
 @app.exception_handler(Exception)

@@ -51,7 +51,7 @@ def issue_token(request: TokenRequest):
 def refresh_token(verified_data:tuple = Depends(verify_refresh_token)):
     old_refresh_token, payload = verified_data
     user_id = payload.get("sub")
-    original_exp = datetime.fromtimestamp(payload.get("exp"))
+    original_exp = datetime.fromtimestamp(payload.get("exp"), datetime.UTC)
     repository.add_token_to_blacklist(token=old_refresh_token, expires_at=original_exp)
     access_token = security.create_access_token(data={"sub": str(user_id)})
     refresh_token = security.create_refresh_token(data={"sub": str(user_id)})
@@ -64,7 +64,7 @@ def invalidate_token(
     verified_data: tuple = Depends(verify_refresh_token)
 ):
     old_refresh_token, payload = verified_data
-    original_exp = datetime.fromtimestamp(payload.get("exp"))
+    original_exp = datetime.fromtimestamp(payload.get("exp"), datetime.UTC)
     
     repository.add_token_to_blacklist(
         token=old_refresh_token, 
