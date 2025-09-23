@@ -39,12 +39,12 @@ def create_user_in_db(request) -> dict:
 
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 def get_user_id_from_session(sid: str) -> int | None:
     session = session_db.get(sid)
-    if session and session["expires_at"] > datetime.now(datetime.UTC):
+    if session and session["expires_at"] > datetime.now(timezone.utc):
         return session["user_id"]
     return None
 
@@ -52,7 +52,7 @@ def get_user_id_from_session(sid: str) -> int | None:
 def create_session_in_db(user_id: int, expire_in_minutes: int) -> str:
     sid = str(uuid.uuid4())
 
-    expires_time = datetime.now(datetime.UTC) + timedelta(minutes=expire_in_minutes)
+    expires_time = datetime.now(timezone.utc) + timedelta(minutes=expire_in_minutes)
     session_db[sid] = {
         "user_id": user_id,
         "expires_at": expires_time,

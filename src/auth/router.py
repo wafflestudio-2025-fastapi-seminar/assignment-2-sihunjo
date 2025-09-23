@@ -12,7 +12,7 @@ from typing import Annotated
 from src.common import repository, security
 from src.common.database import blocked_token_db, session_db, user_db
 from src.auth.schemas import TokenResponse, TokenRequest
-from datetime import datetime
+from datetime import datetime, timezone
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -22,7 +22,9 @@ LONG_SESSION_LIFESPAN = 24 * 60
 def verify_refresh_token(
     authorization: Annotated[str | None, Header()] = None,
 ) -> tuple[str, dict]:
-    if not authorization or not authorization.startswith("Bearer "):
+    if not authorization:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="UNAUTHENTICATED")
+    if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="BAD AUTHORIZATION HEADER")
 
     token = authorization.split(" ")[1]
@@ -43,7 +45,8 @@ def issue_token(request: TokenRequest):
     if not user or not security.verify_password(request.password, user["hashed_password"]):
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail = "INVALID ACCOUNT")
     access_token = security.create_access_token(data={"sub":str(user["user_id"])})
-    refresh_token = security.create_refresh_token(data={"sub":str(user["user_id"])})
+    # Align refresh token expiration with LONG_SESSION_LIFESPAN (minutes)
+    refresh_token = security.create_refresh_token(data={"sub":str(user["user_id"])}, expires_in_minutes=LONG_SESSION_LIFESPAN)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 
@@ -51,10 +54,11 @@ def issue_token(request: TokenRequest):
 def refresh_token(verified_data:tuple = Depends(verify_refresh_token)):
     old_refresh_token, payload = verified_data
     user_id = payload.get("sub")
-    original_exp = datetime.fromtimestamp(payload.get("exp"), datetime.UTC)
+    original_exp = datetime.fromtimestamp(payload.get("exp"), timezone.utc)
     repository.add_token_to_blacklist(token=old_refresh_token, expires_at=original_exp)
     access_token = security.create_access_token(data={"sub": str(user_id)})
-    refresh_token = security.create_refresh_token(data={"sub": str(user_id)})
+    # Align refresh token lifespan with LONG_SESSION_LIFESPAN (minutes) to support test monkeypatching
+    refresh_token = security.create_refresh_token(data={"sub": str(user_id)}, expires_in_minutes=LONG_SESSION_LIFESPAN)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 
@@ -64,7 +68,7 @@ def invalidate_token(
     verified_data: tuple = Depends(verify_refresh_token)
 ):
     old_refresh_token, payload = verified_data
-    original_exp = datetime.fromtimestamp(payload.get("exp"), datetime.UTC)
+    original_exp = datetime.fromtimestamp(payload.get("exp"), timezone.utc)
     
     repository.add_token_to_blacklist(
         token=old_refresh_token, 

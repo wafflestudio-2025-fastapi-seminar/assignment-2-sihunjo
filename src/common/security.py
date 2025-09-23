@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -33,15 +33,18 @@ def verify_token(token: str) -> dict:
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
-    expire = datetime.now(datetime.UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
-def create_refresh_token(data: dict) -> str:
+def create_refresh_token(data: dict, expires_in_minutes: int | None = None) -> str:
     to_encode = data.copy()
-    expire = datetime.now(datetime.UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    if expires_in_minutes is None:
+        expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=expires_in_minutes)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
