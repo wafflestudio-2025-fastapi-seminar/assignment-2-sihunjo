@@ -31,9 +31,12 @@ def verify_token(token: str) -> dict:
     )
 
 
-def create_access_token(data: dict) -> str:
+def create_access_token(data: dict, expires_in_minutes: int | None = None) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    if expires_in_minutes is None:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=expires_in_minutes)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

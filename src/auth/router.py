@@ -44,7 +44,7 @@ def issue_token(request: TokenRequest):
     user = repository.get_user_by_email(request.email)
     if not user or not security.verify_password(request.password, user["hashed_password"]):
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail = "INVALID ACCOUNT")
-    access_token = security.create_access_token(data={"sub":str(user["user_id"])})
+    access_token = security.create_access_token(data={"sub":str(user["user_id"])}, expires_in_minutes=SHORT_SESSION_LIFESPAN)
     # Align refresh token expiration with LONG_SESSION_LIFESPAN (minutes)
     refresh_token = security.create_refresh_token(data={"sub":str(user["user_id"])}, expires_in_minutes=LONG_SESSION_LIFESPAN)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
