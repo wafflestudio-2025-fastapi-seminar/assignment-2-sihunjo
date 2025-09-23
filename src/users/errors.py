@@ -12,6 +12,6 @@ class EmailAlreadyExists(CustomException):
     def __init__(self):
         super().__init__(
             status_code = 409,
-            error_code = "ERR_003",
-            error_message = "Existing Email"
+            error_code = "ERR_005",
+            error_message = "EMAIL ALREADY EXISTS"
         )

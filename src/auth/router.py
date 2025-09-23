@@ -83,9 +83,10 @@ def session_login(request:TokenRequest,response:Response):
     response.set_cookie(key="sid", value=sid, httponly=True, max_age=LONG_SESSION_LIFESPAN * 60)
     return {"message": "Session login successful"}
 
-@auth_router.delete("/session")
+@auth_router.delete("/session", status_code=status.HTTP_204_NO_CONTENT)
 def session_logout(response: Response, sid: Annotated[str | None, Cookie()] = None):
-    if sid:
-        repository.delete_session_from_db(sid)
-        response.delete_cookie(key="sid")
-    return response
+    if not sid:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="UNAUTHENTICATED")
+    repository.delete_session_from_db(sid)
+    response.delete_cookie(key="sid")
+    return None

@@ -22,7 +22,13 @@ REFRESH_TOKEN_EXPIRE_DAYS = 14
 
 
 def verify_token(token: str) -> dict:
-    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    # Explicitly enforce expiration validation with zero leeway
+    return jwt.decode(
+        token,
+        SECRET_KEY,
+        algorithms=[ALGORITHM],
+        options={"verify_exp": True},
+    )
 
 
 def create_access_token(data: dict) -> str:
