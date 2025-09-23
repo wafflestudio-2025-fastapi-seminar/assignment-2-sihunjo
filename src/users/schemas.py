@@ -3,7 +3,7 @@ import re
 from pydantic import BaseModel, field_validator, EmailStr
 from fastapi import HTTPException
 
-from users.errors import InvalidPasswordException
+from .errors import InvalidPasswordException
 
 class CreateUserRequest(BaseModel):
     name: str
@@ -21,12 +21,20 @@ class CreateUserRequest(BaseModel):
     
     @field_validator('phone_number', mode='after')
     def validate_phone_number(cls, v):
-        pass
+        pattern = r"^010-[0-9]{4}-[0-9]{4}$"
+        if not re.match(pattern,v):
+            raise ValueError("전화번호 형식에 맞춰 입력하세요!")
+        return v
+        
 
     @field_validator('bio', mode='after')
     def validate_bio(cls, v):
-        pass
+        if v is not None and len(v) > 500:
+            raise ValueError("글자 수는 500자를 넘을 수 없습니다.")
+        return v
+    
 
+    
 class UserResponse(BaseModel):
     user_id: int
     name: str
