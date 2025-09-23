@@ -1,6 +1,5 @@
-from .database import user_db, session_db, blocked_token_db
+from .database import user_db, session_db, blocked_token_db, get_new_user_id
 from .security import hash_password
-from tests.util import get_new_user_id
 
 
 def get_user_by_email(email: str) -> dict | None:
