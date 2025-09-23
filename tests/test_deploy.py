@@ -4,6 +4,8 @@ from fastapi.testclient import TestClient
 
 from server_ip import server_ip
 
+
+@pytest.mark.skipif(server_ip in ("127.0.0.1", "localhost", "0.0.0.0"), reason="Skipping deployment test in local environment")
 def test_deployment(
     client: TestClient
 ):

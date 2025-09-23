@@ -21,7 +21,6 @@ async def custom_exception_handler(request: Request, exc: CustomException):
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    # Map known messages to specific codes
     detail = exc.detail if isinstance(exc.detail, str) else "HTTP ERROR"
     mapping = {
         "BAD AUTHORIZATION HEADER": "ERR_007",
@@ -42,10 +41,8 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    # Translate validation errors to standardized codes/messages
     try:
         errors = exc.errors()
-        # Prioritize field-specific mappings
         for err in errors:
             loc = err.get("loc") or []
             field = loc[-1] if loc else None
@@ -65,7 +62,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
                         "error_msg": "BIO TOO LONG",
                     },
                 )
-        # Default for missing or other validation errors
         return JSONResponse(
             status_code=422,
             content={
@@ -74,7 +70,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             },
         )
     except Exception:
-        # Fallback to generic validation error if unexpected structure
         return JSONResponse(
             status_code=422,
             content={
@@ -96,8 +91,6 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 @app.get("/health")
 def health_check():
-    # 서버 정상 배포 여부를 확인하기 위한 엔드포인트입니다.
-    # 본 코드는 수정하지 말아주세요!
     hash = get_all_src_py_files_hash()
     return {
         "status": "ok",

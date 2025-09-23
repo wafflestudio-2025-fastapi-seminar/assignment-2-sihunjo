@@ -19,7 +19,6 @@ def get_user_by_id(user_id: int) -> dict | None:
 def create_user_in_db(request) -> dict:
     from src.users.schemas import CreateUserRequest  # type: ignore
 
-    # Defensive unique email check at data layer (simulates DB UNIQUE constraint)
     if get_user_by_email(request.email):
         from src.users.errors import EmailAlreadyExists  # type: ignore
         raise EmailAlreadyExists()
@@ -66,7 +65,7 @@ def delete_session_from_db(sid: str) -> None:
 
 
 def add_token_to_blacklist(token: str, expires_at: datetime):
-    blocked_token_db[token] = expires_at  # type: ignore[index]
+    blocked_token_db[token] = expires_at
 
 
 def is_token_in_blacklist(token: str) -> bool:

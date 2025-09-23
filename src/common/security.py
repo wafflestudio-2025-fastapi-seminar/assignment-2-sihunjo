@@ -22,7 +22,6 @@ REFRESH_TOKEN_EXPIRE_DAYS = 14
 
 
 def verify_token(token: str) -> dict:
-    # Explicitly enforce expiration validation with zero leeway
     return jwt.decode(
         token,
         SECRET_KEY,

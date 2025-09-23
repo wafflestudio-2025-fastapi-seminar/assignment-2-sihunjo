@@ -5,7 +5,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-# auth/token
 def test_create_token(
     client: TestClient,
     created_user: dict
@@ -181,7 +180,6 @@ def test_delete_token(
     assert res_json["error_code"] == "ERR_008"
     assert res_json["error_msg"] == "INVALID TOKEN"
 
-# auth/session
 def test_session(
     client: TestClient,
     created_user: dict

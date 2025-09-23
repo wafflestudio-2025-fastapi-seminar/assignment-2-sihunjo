@@ -45,7 +45,6 @@ def issue_token(request: TokenRequest):
     if not user or not security.verify_password(request.password, user["hashed_password"]):
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail = "INVALID ACCOUNT")
     access_token = security.create_access_token(data={"sub":str(user["user_id"])}, expires_in_minutes=SHORT_SESSION_LIFESPAN)
-    # Align refresh token expiration with LONG_SESSION_LIFESPAN (minutes)
     refresh_token = security.create_refresh_token(data={"sub":str(user["user_id"])}, expires_in_minutes=LONG_SESSION_LIFESPAN)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
@@ -57,7 +56,6 @@ def refresh_token(verified_data:tuple = Depends(verify_refresh_token)):
     original_exp = datetime.fromtimestamp(payload.get("exp"), timezone.utc)
     repository.add_token_to_blacklist(token=old_refresh_token, expires_at=original_exp)
     access_token = security.create_access_token(data={"sub": str(user_id)})
-    # Align refresh token lifespan with LONG_SESSION_LIFESPAN (minutes) to support test monkeypatching
     refresh_token = security.create_refresh_token(data={"sub": str(user_id)}, expires_in_minutes=LONG_SESSION_LIFESPAN)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 

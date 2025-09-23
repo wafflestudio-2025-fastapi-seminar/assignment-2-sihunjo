@@ -3,7 +3,6 @@ user_db = []
 session_db = {}
 
 
-# Simple in-memory user id generator for this assignment
 _user_id_counter = 0
 
 
